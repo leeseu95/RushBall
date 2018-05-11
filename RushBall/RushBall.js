@@ -22,6 +22,7 @@ var positionZInit = 200;
 var spherePlayer = null;
 var availableToMove = true;
 var availableToJump = true;
+var onPause = false;
 
 //Variables del stage
 var roads = [];
@@ -311,7 +312,7 @@ function spawnObject(obj) { //Funcion para spawnear aleatoriamente
     }
 }
 
-
+//Funcion de animate
 var increasingSpeed = 4; //La velocidad que iremos incrementando a traves del juego
 function animate() {
     var now = Date.now();
@@ -408,6 +409,15 @@ function onKeyDown(event) {
         case 32: //Space (aka jump)
             if (availableToJump == true) {
                 jumpPlayer(spherePlayer);
+            }
+            break;
+        case 27: //Pause (escape)
+            if (onPause == false) {
+                onPause = true;
+                spherePlayer.position.y = -2;
+            } else if (onPause == true) {
+                onPause = false;    
+                spherePlayer.position.y = -1;
             }
             break;
     }
