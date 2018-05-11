@@ -620,10 +620,13 @@ function restart() {
         console.log('snap:', snap.val());
         snap.val().forEach((_score) => {
             if (score > _score) {
-
+                array.push(score);
             }
-        })
+            array.push(_score);
+        });
     });
+    array.pop();
+    topScoreRef.set(array);
     // camera.position.set(0, 30, 20);
     // camera.rotation.set(-0.7, 0, 0);
     // spherePlayer.position.set(5, -1, positionZInit);
