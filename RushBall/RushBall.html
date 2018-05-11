@@ -120,11 +120,7 @@
 
         $(document).ready(
             function() {
-                var canvas = document.getElementById("webglcanvas");
-
-                createScene(canvas);
-
-                // run();
+                console.log('updated3');
                 var topScoreRef = firebase.database().ref('topScores');
                 topScoreRef.on('value', function(snapshot) {
                     var val = snapshot.val();
@@ -145,7 +141,15 @@
         }
 
         function startGame() {
-            console.log('start game');
+            var username = $("#uname").val();
+            if (username.length) {
+                $(".main-menu-container").css("display", "none");
+                $("#stats").css("display", "block");
+                var canvas = document.getElementById("webglcanvas");
+                var color = $("#uname").css("color");
+                createScene(canvas, username, color);
+                run();
+            }
         }
     </script>
 

@@ -215,8 +215,9 @@ function createRings(posXRings, posZRings) { //Creacion de los anillos dependien
     scene.add(ring);
 }
 
-function loadPlayerSphere() { //Loadear a nuestro jugador al que estaremos utilizando
-    var esfera = new THREE.Mesh(new THREE.SphereGeometry(5, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+function loadPlayerSphere(color) { //Loadear a nuestro jugador al que estaremos utilizando
+    // var esfera = new THREE.Mesh(new THREE.SphereGeometry(5, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+    var esfera = new THREE.Mesh(new THREE.SphereGeometry(5, 8, 6), new THREE.MeshBasicMaterial({ color }));
 
     spherePlayer = esfera;
     spherePlayer.position.set(5, -1, positionZInit);
@@ -412,6 +413,7 @@ function onKeyDown(event) {
             }
             break;
         case 27: //Pause (escape)
+        case 80: //Pause (escape)
             if (onPause == false) {
                 onPause = true;
                 spherePlayer.position.y = -2;
@@ -423,7 +425,8 @@ function onKeyDown(event) {
     }
 }
 
-function createScene(canvas) {
+function createScene(canvas, username, color) {
+    playerUser = username;
     // Create the Three.js renderer and attach it to our canvas
     renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
     // create a render and set the size
@@ -448,7 +451,7 @@ function createScene(canvas) {
     scene.background.minFilter = THREE.LinearFilter;
 
     // Load Player
-    loadPlayerSphere();
+    loadPlayerSphere(color);
 
     // Add  a camera so we can view the scene
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 10000);
@@ -611,6 +614,16 @@ function collisions() {
 
 //Funcion de restart para cuando choque
 function restart() {
+    var topScoreRef = firebase.database().ref('topScores');
+    const array = [];
+    topScoreRef.once('value').then((snap) => {
+        console.log('snap:', snap.val());
+        snap.val().forEach((_score) => {
+            if (score > _score) {
+
+            }
+        })
+    });
     // camera.position.set(0, 30, 20);
     // camera.rotation.set(-0.7, 0, 0);
     // spherePlayer.position.set(5, -1, positionZInit);
@@ -618,8 +631,8 @@ function restart() {
     scoreBoard = "You have lost the game! The game will start in 3 seconds";
     document.getElementById("scoreboard").innerHTML = scoreBoard;
     lost = true;
-    var interval = setInterval(function () {
-        location.reload();
+    setTimeout(function () {
+        location.reload(true);
     }, 2500);
 }
 
