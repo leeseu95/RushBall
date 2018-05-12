@@ -23,6 +23,7 @@ var spherePlayer = null;
 var availableToMove = true;
 var availableToJump = true;
 var onPause = false;
+var songMuted = false;
 
 //Variables del stage
 var roads = [];
@@ -359,8 +360,10 @@ function animate() {
         camera.position.z -= angle * increasingSpeed; //Camara se movera con la esfera
         score++; //Vamos agregando los puntos
         playerPosScore -= 10;
-        scoreBoard = "Score:\t" + score + " points - " + playerUser;
+        scoreBoard = "Score:\t" + score + " points";
+        playerBoard = playerUser;
         document.getElementById("scoreboard").innerHTML = scoreBoard;
+        document.getElementById("playerName").innerHTML = playerBoard;
     } else if (lost == true) {
         // console.log(lost);
         spherePlayer.position.z = positionZInit;
@@ -417,11 +420,21 @@ function onKeyDown(event) {
             if (onPause == false) {
                 onPause = true;
                 spherePlayer.position.y = -2;
+                $(".pause-menu-container").css("display", "block");
             } else if (onPause == true) {
                 onPause = false;    
                 spherePlayer.position.y = -1;
+                $(".pause-menu-container").css("display", "none");
             }
             break;
+        case 77: //Mute button
+            if(songMuted == false) {
+                Sounds.background.setVolume(0);
+                songMuted = true;
+            } else if (songMuted == true) {
+                Sounds.background.setVolume(1);
+                songMuted = false;
+            }
     }
 }
 
@@ -495,6 +508,7 @@ function createScene(canvas, username, color) {
     for (let i = 0; i < 5; i++) {
         loadTrap(20, 10);
         loadObstacles(-20, -180);
+        createLaserRays(-20, -200);
     }
 
     // createRings(-5, -230);
@@ -504,11 +518,6 @@ function createScene(canvas, username, color) {
     for (let i = 0; i < 3; i++) {
         createRings(15, tempPosZ);
         tempPosZ -= 20;
-    }
-    tempPosZ -= 20;
-    for (let i = 0; i < 5; i++) {
-        createLaserRays(tempPosX, tempPosZ);
-        tempPosZ -= 30;
     }
 
     //Composer para el efecto de bloom
@@ -520,8 +529,10 @@ function createScene(canvas, username, color) {
     composer.addPass(pass);
 
     //Inicializar nuestro scoreboard
-    scoreBoard = "Score:\t" + score + " points - " + playerUser;
+    scoreBoard = "Score:\t" + score + " points";
+    playerBoard = playerUser;
     document.getElementById("scoreboard").innerHTML = scoreBoard;
+    document.getElementById("playerName").innerHTML = playerBoard;
 
     // Now add the group to our scene
     scene.add(root);
@@ -565,7 +576,7 @@ function collisions() {
     //Funcion de colision de Obstacles
     for (let i = 0; i < obstacles.length; i++) {
         if (spherePlayer.position.z <= obstacles[i].position.z + 3.5 && spherePlayer.position.z >= obstacles[i].position.z - 3.5) {
-            if (spherePlayer.position.x <= obstacles[i].position.x + 5 && spherePlayer.position.x >= obstacles[i].position.x - 5) {
+            if (spherePlayer.position.x <= obstacles[i].position.x + 7 && spherePlayer.position.x >= obstacles[i].position.x - 7) {
                 if (spherePlayer.position.y <= obstacles[i].position.y + 10) {
                     parts.push(new ExplodeAnimation(spherePlayer.position.x, spherePlayer.position.y, spherePlayer.position.z));
                     Sounds.crash.play();
@@ -579,7 +590,7 @@ function collisions() {
     for (let i = 0; i < laserRays.length; i++) {
         if (spherePlayer.position.z <= laserRays[i][2].position.z + 3.5 && spherePlayer.position.z >= laserRays[i][2].position.z - 3.5) {
             if (spherePlayer.position.x <= laserRays[i][2].position.x + 15 && spherePlayer.position.x >= laserRays[i][2].position.x - 15) {
-                if (spherePlayer.position.y <= laserRays[i][2].position.y + 10) {
+                if (spherePlayer.position.y <= laserRays[i][2].position.y + 7) {
                     parts.push(new ExplodeAnimation(spherePlayer.position.x, spherePlayer.position.y, spherePlayer.position.z));
                     Sounds.crash.play();
                     restart();
@@ -613,26 +624,33 @@ function collisions() {
 }
 
 //Funcion de restart para cuando choque
-function restart() {
+async function restart() {
     var topScoreRef = firebase.database().ref('topScores');
     const array = [];
-    topScoreRef.once('value').then((snap) => {
-        console.log('snap:', snap.val());
-        snap.val().forEach((_score) => {
-            if (score > _score) {
-                array.push(score);
-            }
-            array.push(_score);
-        });
+    let inserted = false;
+    await topScoreRef.once('value').then((snap) => {
+        // console.log('snap:', snap.val());
+        if(snap.val()) {
+            snap.val().forEach((_score) => {
+                if (score > _score.score && !inserted) {
+                    array.push({ name: playerUser, score: score });
+                    inserted = true;
+                }
+                array.push(_score);
+            });
+        }
     });
-    array.pop();
+    if (array.length > 3) array.pop();
+    // topScoreRef.set(array);
     topScoreRef.set(array);
     // camera.position.set(0, 30, 20);
     // camera.rotation.set(-0.7, 0, 0);
     // spherePlayer.position.set(5, -1, positionZInit);
     // spherePlayer.rotation.set(0, 9.5, 0);
-    scoreBoard = "You have lost the game! The game will start in 3 seconds";
+    scoreBoard = "You have lost the game!";
+    playerBoard = playerUser;
     document.getElementById("scoreboard").innerHTML = scoreBoard;
+    document.getElementById("playerName").innerHTML = playerBoard;
     lost = true;
     setTimeout(function () {
         location.reload(true);
@@ -836,6 +854,10 @@ Sound.prototype.stop = function () {
     this.audio.pause();
 };
 
+Sound.prototype.setVolume = function (val) {
+    this.audio.volume = val;
+}
+
 var ringSounds = [
     new Sound('ring'), new Sound('ring'), new Sound('ring'), new Sound('ring'), new Sound('ring')
 ];
@@ -850,7 +872,7 @@ function playRingSound() {
     ringSounds[ringSoundPlaying].play();
     ringSoundPlaying += 1;
     ringSoundPlaying = ringSoundPlaying % 5;
-    console.log(ringSoundPlaying);
+    // console.log(ringSoundPlaying);
 }
 
 Sounds.all.forEach(function (sound) {

@@ -34,6 +34,17 @@
     <script src="RushBall.js"></script>
 
     <style>
+        @font-face {
+            font-family: zorque;
+            src: url(../fonts/zorque.ttf);
+        }
+        
+        * {
+            margin: 0;
+            font-weight: 300;
+            font-family: 'zorque', sans-serif;
+        }
+
         html, body {
             width: 100%;
             height: 100%;
@@ -42,17 +53,31 @@
             overflow: hidden;
             display: block;
         }
-        #stats {
+        
+        .stats {
             position: absolute;
             top: 0px; left: 0px; width: 25%;
             color: white;
             padding: 5px;
             font-family: monospace;
-            font-size: 32px;
+            font-size: 42px;
             text-align: center;
             z-index: 100;
             display: none;
         }
+
+        .playerName {
+            position: absolute;
+            top: 0px; left: 1500px; width: 25%;
+            color: white;
+            padding: 5px;
+            font-family: monospace;
+            font-size: 42px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+        }
+        
         .main-menu-container {
             height: 100%;
             width: 100%;
@@ -60,6 +85,28 @@
             text-align: center;
             padding-top: 3%;
         }
+
+        .pause-menu-container {
+            height: 100%;
+            width: 100%;
+            background-color: black;
+            text-align: center;
+            padding-top: 3%;
+            display: none;
+        }
+        
+        .pause-tag {
+            color:white;
+            font-size: 2.5em;
+            padding-top: 5%;
+        }
+
+        .pause-instructions {
+            color:white;
+            font-size: 2.5em;
+            padding-top: 5%;
+        }
+        
         #uname {
             width: 30%;
             height: 50px;
@@ -82,6 +129,11 @@
         .username-tag {
             font-size: 2em;
             color: white;
+        }
+        .instructions {
+            font-size: 2em;
+            color: white;
+            padding-top: 3%;
         }
         .color-container {
             height: 100px;
@@ -124,12 +176,14 @@
                 var topScoreRef = firebase.database().ref('topScores');
                 topScoreRef.on('value', function(snapshot) {
                     var val = snapshot.val();
-                    var score1 = '1. ' + val[0].name + ' - ' + val[0].score;
-                    var score2 = '2. ' + val[1].name + ' - ' + val[1].score;
-                    var score3 = '3. ' + val[2].name + ' - ' + val[2].score;
-                    $("#score-1").text(score1);
-                    $("#score-2").text(score2);
-                    $("#score-3").text(score3);
+                    if(val) {
+                        var score1 = '1. ' + val[0].name + ' - ' + val[0].score;
+                        var score2 = '2. ' + val[1].name + ' - ' + val[1].score;
+                        var score3 = '3. ' + val[2].name + ' - ' + val[2].score;
+                        $("#score-1").text(score1);
+                        $("#score-2").text(score2);
+                        $("#score-3").text(score3);   
+                    }
                 });
             }
         );
@@ -144,7 +198,8 @@
             var username = $("#uname").val();
             if (username.length) {
                 $(".main-menu-container").css("display", "none");
-                $("#stats").css("display", "block");
+                $(".stats").css("display", "block");
+                $(".playerName").css("display", "block");
                 var canvas = document.getElementById("webglcanvas");
                 var color = $("#uname").css("color");
                 createScene(canvas, username, color);
@@ -176,10 +231,22 @@
         <p class="top-scores" id="score-3">3.</p>
 
         <button id="play-button" onclick="startGame()">Play</button>
+        <p class="instructions">Controls: <- = MOVE LEFT, -> = MOVE RIGHT, SPACE = JUMP</p>
     </div>
 
-    <div id="stats">
+    <div class="pause-menu-container">
+        <p class="pause-tag">GAME PAUSED</p>
+        <p class="pause-instructions">PRESS P or ESC to return to the game</p>
+        <p class="pause-instructions">Controls: <- = MOVE LEFT, -> = MOVE RIGHT, SPACE = JUMP</p>
+        <p class="instructions">PRESS M TO MUTE THE MUSIC</p>
+    </div>
+
+    <div class = "stats">
         <p id = "scoreboard"></p>
+    </div>
+
+    <div class = "playerName">
+        <p id = "playerName"></p>
     </div>
 
     <canvas id="webglcanvas">
