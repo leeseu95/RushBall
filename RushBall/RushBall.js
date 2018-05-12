@@ -1,7 +1,7 @@
 //Rush ball
 //Seung Lee - A01021720
 //Gualberto Casas - A00942270
-//Alonso Iturbe - A01
+//Alonso Iturbe - A01021621
 
 //Basicas de la escena
 var renderer = null,
