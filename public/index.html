@@ -1,0 +1,262 @@
+<!--//Rush ball
+//Seung Lee - A01021720
+//Gualberto Casas - A00942270
+//Alonso Iturbe - A01021621-->
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <title>Proyecto Final - Rush Ball</title>
+
+    <!--BootStrap-->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <!--Firebase-->
+    <script src="https://www.gstatic.com/firebasejs/5.0.2/firebase.js"></script>
+
+    <script src="./libs/jquery-1.9.1/jquery-1.9.1.js"></script>
+    <script src="./libs/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
+
+    <script src="./libs/three.js/three.js"></script>
+    <script src="./libs/requestAnimationFrame/RequestAnimationFrame.js"></script>
+
+    <script src="./libs/tween.js/tween.min.js"></script>
+    <script src="./libs/keyframe.js/keyframe.js"></script>
+
+    <script src="./libs/requestAnimationFrame/RequestAnimationFrame.js"></script>
+    <script src="./libs/three.js/loaders/OBJLoader.js"></script>
+    <script src="./libs/js/postprocessing/EffectComposer.js"></script>
+    <script src="./libs/js/postprocessing/RenderPass.js"></script>
+    <script src="./libs/js/postprocessing/MaskPass.js"></script>
+    <script src="./libs/js/postprocessing/ShaderPass.js"></script>
+    <script src="./libs/js/shaders/CopyShader.js"></script>
+    <script src="./libs/js/shaders/FXAAShader.js"></script>
+    <script src="./libs/js/shaders/ConvolutionShader.js"></script>
+    <script src="./libs/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="./libs/js/postprocessing/UnrealBloomPass.js"></script>
+    <script src="./libs/BloomBlendPass.js"></script>
+
+    <script src="RushBall.js"></script>
+
+    <style>
+        @font-face {
+            font-family: zorque;
+            src: url(./fonts/zorque.ttf);
+        }
+        
+        * {
+            margin: 0;
+            font-weight: 300;
+            font-family: 'zorque', sans-serif;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            border: 0;
+            overflow: hidden;
+            display: block;
+        }
+        
+        .stats {
+            position: absolute;
+            top: 0px; left: 0px; width: 21%;
+            color: white;
+            padding: 5px;
+            font-family: monospace;
+            font-size: 42px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+        }
+
+        .playerName {
+            position: absolute;
+            top: 0px; right: 70px; width: 25%;
+            color: white;
+            padding: 5px;
+            font-family: monospace;
+            font-size: 42px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+        }
+        
+        .main-menu-container {
+            height: 100%;
+            width: 100%;
+            background-color: black;
+            text-align: center;
+            padding-top: 3%;
+        }
+
+        .pause-menu-container {
+            height: 100%;
+            width: 100%;
+            background-color: black;
+            text-align: center;
+            padding-top: 3%;
+            display: none;
+        }
+        
+        .pause-tag {
+            color:white;
+            font-size: 2.5em;
+            padding-top: 5%;
+        }
+
+        .pause-instructions {
+            color:white;
+            font-size: 2.5em;
+            padding-top: 5%;
+        }
+        
+        #uname {
+            width: 30%;
+            height: 50px;
+            border-width: 0px;
+            border-bottom-width: 3px;
+            border-bottom-color: #CD1076;
+            background-color: black;
+            color: #CD1076;
+            text-align: center;
+            font-size: 1.7em;
+        }
+
+        #play-button {
+            font-size: 1.5em;
+            background-color: #cd1076;
+            padding: 5px 25px;
+        }
+        #uname:focus {
+            outline: none;
+        }
+        .username-tag {
+            font-size: 2em;
+            color: white;
+        }
+        .instructions {
+            font-size: 2em;
+            color: white;
+            padding-top: 3%;
+        }
+        .color-container {
+            height: 100px;
+            width: 100px;
+            margin: auto;
+        }
+        .cc-1 {
+            background-color: #cd1076;
+        }
+        .cc-2 {
+            background-color: #a0adff;
+        }
+        .cc-3 {
+            background-color: #f0f8ff;
+        }
+        .cc-4 {
+            background-color: #FF0000;
+        }
+        .top-scores {
+            color: white;
+            font-size: 1.3em;
+        }
+    </style>
+
+    <script type="text/javascript">
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyB7MZVzCtCTJVOMLIvBgqyHaf5pnERAOvE",
+            authDomain: "rushball-a09fa.firebaseapp.com",
+            databaseURL: "https://rushball-a09fa.firebaseio.com",
+            projectId: "rushball-a09fa",
+            storageBucket: "",
+            messagingSenderId: "719634248508"
+        };
+        firebase.initializeApp(config);
+
+        $(document).ready(
+            function() {
+                console.log('updated3');
+                var topScoreRef = firebase.database().ref('topScores');
+                topScoreRef.on('value', function(snapshot) {
+                    var val = snapshot.val();
+                    if(val) {
+                        var score1 = '1. ' + val[0].name + ' - ' + val[0].score;
+                        var score2 = '2. ' + val[1].name + ' - ' + val[1].score;
+                        var score3 = '3. ' + val[2].name + ' - ' + val[2].score;
+                        $("#score-1").text(score1);
+                        $("#score-2").text(score2);
+                        $("#score-3").text(score3);   
+                    }
+                });
+            }
+        );
+
+        function selectColor(color) {
+            $("#uname").css("color", color);
+            $("#uname").css("border-color", color);
+            $("#play-button").css("background-color", color);
+        }
+
+        function startGame() {
+            var username = $("#uname").val();
+            if (username.length) {
+                $(".main-menu-container").css("display", "none");
+                $(".stats").css("display", "block");
+                $(".playerName").css("display", "block");
+                var canvas = document.getElementById("webglcanvas");
+                var color = $("#uname").css("color");
+                createScene(canvas, username, color);
+                run();
+            }
+        }
+    </script>
+
+</head>
+<body>
+
+    <div class="main-menu-container">
+        <p class="username-tag">Username</p>
+        <input type="text" id="uname" name="name">
+
+        <p class="username-tag" style="margin-top: 50px;">Sphere Color</p>
+        <div class="container" style="margin-top: 60px;">
+            <div class="row">
+                <div class="col"><div class="color-container cc-1" onclick="selectColor('#cd1076')"></div></div>
+                <div class="col"><div class="color-container cc-2" onclick="selectColor('#a0adff')"></div></div>
+                <div class="col"><div class="color-container cc-3" onclick="selectColor('#f0f8ff')"></div></div>
+                <div class="col"><div class="color-container cc-4" onclick="selectColor('#FF0000')"></div></div>
+            </div>
+        </div>
+
+        <p class="username-tag" style="margin-top: 50px;">Leaderboard</p>
+        <p class="top-scores" id="score-1">1.</p>
+        <p class="top-scores" id="score-2">2.</p>
+        <p class="top-scores" id="score-3">3.</p>
+
+        <button id="play-button" onclick="startGame()">Play</button>
+        <p class="instructions">Controls: <- = MOVE LEFT, -> = MOVE RIGHT, SPACE = JUMP</p>
+    </div>
+
+    <div class="pause-menu-container">
+        <p class="pause-tag">GAME PAUSED</p>
+        <p class="pause-instructions">PRESS P or ESC to return to the game</p>
+        <p class="pause-instructions">Controls: <- = MOVE LEFT, -> = MOVE RIGHT, SPACE = JUMP</p>
+        <p class="instructions">PRESS M TO MUTE THE MUSIC</p>
+    </div>
+
+    <div class = "stats">
+        <p id = "scoreboard"></p>
+    </div>
+
+    <div class = "playerName">
+        <p id = "playerName"></p>
+    </div>
+
+    <canvas id="webglcanvas">
+    </canvas>
+
+</body>
+</html>
